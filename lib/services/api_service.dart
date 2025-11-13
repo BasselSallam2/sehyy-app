@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiService {
-  final String _baseUrl = 'http://10.0.2.2:3000/api'; // <-- اتأكد من البورت
+  final String _baseUrl = 'https://dashboard.sehetie.com/api'; // <-- اتأكد من البورت
   final _storage = const FlutterSecureStorage();
 
   // --- دوال الـ Headers ---
