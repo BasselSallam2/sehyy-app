@@ -5,6 +5,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 // 1. استيراد الملفات اللي هنحتاجها
 import 'package:tabeby_app/services/api_service.dart';
 import 'package:tabeby_app/screens/home_screen.dart'; // <--- شاشتنا الجديدة
+// import main screen
+import 'package:tabeby_app/screens/main_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -54,14 +56,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
         // 6. بننقل اليوزر للشاشة الرئيسية
         // بنستخدم pushReplacement عشان اليوزر لو داس "Back" ميرجعش للوجن
-        Navigator.pushReplacement(
+        Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          MaterialPageRoute(
+            builder: (context) => const MainScreen(),
+          ), // <--- الصح هنا
+          (route) =>
+              false, // <-- السطر ده بيمسح شاشة اللوجن والـ Welcome من الذاكرة
         );
       } else {
         throw Exception('Token not found in response');
       }
-
     } catch (e) {
       // 7. لو فشل (باسورد غلط، ...إلخ)
       setState(() {
@@ -79,9 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('تسجيل الدخول'),
-      ),
+      appBar: AppBar(title: const Text('تسجيل الدخول')),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -98,9 +101,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   initialCountryCode: 'EG',
                   onChanged: (phone) {
-                    _completePhoneNumber = '${phone.countryCode}-${phone.number}';
+                    _completePhoneNumber =
+                        '${phone.countryCode}-${phone.number}';
                   },
-                  validator: (phone) => (phone == null || phone.number.isEmpty) ? 'برجاء إدخال رقم الهاتف' : null,
+                  validator: (phone) => (phone == null || phone.number.isEmpty)
+                      ? 'برجاء إدخال رقم الهاتف'
+                      : null,
                 ),
                 const SizedBox(height: 16),
 
@@ -114,7 +120,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   obscureText: true,
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'برجاء إدخال كلمة المرور';
+                    if (value == null || value.isEmpty)
+                      return 'برجاء إدخال كلمة المرور';
                     return null;
                   },
                 ),
@@ -124,7 +131,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    textStyle: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   onPressed: _handleLogin,
                   child: _isLoading

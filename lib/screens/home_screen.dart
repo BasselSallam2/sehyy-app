@@ -7,6 +7,7 @@ import 'package:tabeby_app/screens/search_screen.dart';
 import 'package:tabeby_app/services/api_service.dart';
 import 'package:tabeby_app/screens/doctor_list_screen.dart';
 import 'package:tabeby_app/screens/doctor_profile_screen.dart';
+import 'package:tabeby_app/screens/about_us_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -64,13 +65,6 @@ class _HomeScreenState extends State<HomeScreen> {
         _allSpecialties =
             results[0] as List<dynamic>; // <--- 1. ضيف 'as List<dynamic>'
         _userCities = results[1] as List<String>;
-
-        final bannerResponse =
-            results[2]
-                as Map<
-                  String,
-                  dynamic
-                >; // <--- 2. اتأكد إنك ضفت 'as Map<String, dynamic>'
 
         _banners = bannerResponse['data'];
         _hasNextPage = bannerResponse['pagination']['hasNextPage'];
@@ -178,14 +172,28 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9F9),
       appBar: AppBar(
-        // ... (الكود زي ما هو) ...
-        title: const Text(
-          'الرئيسية',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: const Text('الرئيسية'),
         backgroundColor: Colors.transparent,
         elevation: 0,
+
+        // --- (جديد) بنلغي زرار الرجوع الأوتوماتيكي ---
+        automaticallyImplyLeading: false,
+
         actions: [
+          // --- (جديد) بنضيف زرار "من نحن" ---
+          IconButton(
+            icon: const Icon(Icons.info_outline_rounded),
+            tooltip: 'عن التطبيق',
+            onPressed: () {
+              // (لازم نتأكد إننا عاملين import فوق)
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AboutUsScreen()),
+              );
+            },
+          ),
+
+          // (ده زرار الخروج اللي إنت عامله)
           IconButton(icon: const Icon(Icons.logout), onPressed: _logout),
         ],
       ),
@@ -398,6 +406,7 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisCount: 4,
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
+        mainAxisExtent: 115, // <-- 1. الحل: بنثبت ارتفاع كل المربعات
       ),
       itemCount: _allSpecialties.length,
       itemBuilder: (context, index) {
@@ -429,7 +438,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              //mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 CachedNetworkImage(
                   imageUrl: specialty['image']['url'],
@@ -441,16 +450,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       const Icon(Icons.error, color: Colors.red),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  specialty['title'],
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
+                SizedBox(
+                  height: 50,
+                  child: Text(
+                    specialty['title'],
+                    textAlign: TextAlign.center,
+                    maxLines: 2, // هيفضل 2
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
+                // --- نهاية التعديل ---
               ],
             ),
           ),

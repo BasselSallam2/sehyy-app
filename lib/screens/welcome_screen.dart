@@ -1,8 +1,7 @@
-// 1. (ده أهم سطر ولازم يكون موجود)
 import 'package:flutter/material.dart';
-import 'package:tabeby_app/screens/login_screen.dart'; // <--- ضيف ده
-import 'package:tabeby_app/screens/signup_screen.dart'; // <--- ضيف ده
-
+import 'package:tabeby_app/screens/login_screen.dart';
+import 'package:tabeby_app/screens/signup_screen.dart';
+import 'package:tabeby_app/screens/about_us_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -13,23 +12,17 @@ class WelcomeScreen extends StatelessWidget {
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      // 1. Stack:
-      // ده أهم Widget هنا. بيسمح لنا "نركب" العناصر فوق بعض
-      // (زي الـ z-index في الويب). هنحط الخلفية تحت، وفوقها الزراير.
       body: Stack(
-        // بنقوله املأ الشاشة كلها
         fit: StackFit.expand,
         children: [
           // --- الطبقة الأولى: الخلفية ---
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
-                // غيّر الاسم ده لاسم الصورة بتاعتك
-                // (أنا هستخدم الصورة اللي حولتها لـ .png)
+                // (اتأكد إن اسم الصورة صح - زي ما استخدمته في الـ assets)
                 image: AssetImage('assets/images/welcome.png'),
-                // fit: BoxFit.cover بيضمن إن الصورة تملأ الشاشة
                 fit: BoxFit.cover,
-                // بنغمّق الصورة شوية عشان الكلام يبان عليها
+                // (الفلتر عشان نغمق الصورة)
                 colorFilter: ColorFilter.mode(Colors.black45, BlendMode.darken),
               ),
             ),
@@ -37,14 +30,11 @@ class WelcomeScreen extends StatelessWidget {
 
           // --- الطبقة التانية: المحتوى (الزراير) ---
           Padding(
-            // بنضيف مساحات فاضية حوالين المحتوى
             padding: const EdgeInsets.symmetric(
               horizontal: 24.0,
               vertical: 60.0,
             ),
             child: Column(
-              // mainAxisAlignment: بيرتب العناصر بالطول
-              // spaceBetween: بيزق واحد فوق خالص وواحد تحت خالص
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 // -- الجزء اللي فوق (اللوجو أو اسم التطبيق) --
@@ -57,7 +47,7 @@ class WelcomeScreen extends StatelessWidget {
                     ),
                     SizedBox(height: 16),
                     Text(
-                      'Sehetie',
+                      'Sehetie', // (الاسم اللي إنت عدلته)
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 40,
@@ -74,25 +64,19 @@ class WelcomeScreen extends StatelessWidget {
 
                 // -- الجزء اللي تحت (الزراير) --
                 Column(
-                  // crossAxisAlignment: بيرتب العناصر بالعرض
-                  // stretch: بيخلي العناصر (الزراير) تملأ العرض كله
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // --- زرار تسجيل الدخول ---
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white, // لون الزرار
-                        foregroundColor: Colors.blue.shade800, // لون النص
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.blue.shade800,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
                       ),
-                      // onPressed: هي الـ Function اللي هتتنفذ لما ندوس
-                      // حالياً هنسيبها فاضية
-                      // ... الكود القديم ...
                       onPressed: () {
-                        // الكود ده هو اللي بينقل للشاشة الجديدة
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -109,24 +93,20 @@ class WelcomeScreen extends StatelessWidget {
                       ),
                     ),
 
-                    // بنسيب مسافة 12 بيكسل بين الزرارين
+                    // --- مسافة ---
                     const SizedBox(height: 12),
 
                     // --- زرار حساب جديد ---
                     OutlinedButton(
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(
-                          color: Colors.white,
-                          width: 2,
-                        ), // الإطار
-                        foregroundColor: Colors.white, // لون النص
+                        side: const BorderSide(color: Colors.white, width: 2),
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
                       ),
                       onPressed: () {
-                        // الكود ده بينقل لشاشة الحساب الجديد
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -142,6 +122,40 @@ class WelcomeScreen extends StatelessWidget {
                         ),
                       ),
                     ),
+
+                    // --- (هنا التعديل) ---
+                    const SizedBox(height: 16),
+
+                    // 1. بنستخدم Align عشان نلغي الـ stretch ونخليه في النص
+                    Align(
+                      alignment: Alignment.center,
+                      child: TextButton(
+                        style: TextButton.styleFrom(
+                          // 2. لون مميز (أبيض شفاف)
+                          foregroundColor: Colors.white.withOpacity(0.85),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 30,
+                            vertical: 10,
+                          ),
+                          // 3. ستايل الخط (أصغر ومش bold)
+                          textStyle: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.normal,
+                            decoration: TextDecoration.none, // 4. من غير خط
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AboutUsScreen(),
+                            ),
+                          );
+                        },
+                        child: const Text('من نحن؟'),
+                      ),
+                    ),
+                    // --- نهاية التعديل ---
                   ],
                 ),
               ],
