@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:tabeby_app/screens/main_screen.dart';
-import 'package:tabeby_app/screens/welcome_screen.dart';
+import 'package:sehetie_app/screens/main_screen.dart';
+import 'package:sehetie_app/screens/welcome_screen.dart';
 
 class AuthCheckScreen extends StatefulWidget {
   const AuthCheckScreen({super.key});
@@ -25,13 +25,14 @@ class _AuthCheckScreenState extends State<AuthCheckScreen> {
     await Future.delayed(const Duration(seconds: 1));
 
     try {
-      // 3. بنقرأ التوكين من الـ Storage
+      // 3. بنقرأ التوكين والحالة كضيف من الـ Storage
       final token = await _storage.read(key: 'auth_token');
+      final isGuest = await _storage.read(key: 'is_guest');
 
       if (!mounted) return; // (Safety check)
 
       if (token != null && token.isNotEmpty) {
-        // 4. لو لقينا توكين: وديه للهوم
+        // 4. لو لقينا توكين: وديه للهوم (سواء كان مستخدم عادي أو ضيف)
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const MainScreen()),
@@ -55,10 +56,6 @@ class _AuthCheckScreenState extends State<AuthCheckScreen> {
   // 7. دي شاشة التحميل اللي اليوزر هيشوفها لثانية
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }

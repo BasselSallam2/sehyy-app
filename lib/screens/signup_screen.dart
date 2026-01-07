@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 // 1. استيراد الـ Service بتاعنا
-import 'package:tabeby_app/services/api_service.dart'; // <--- عدّل اسم المشروع لو مختلف
+import 'package:sehetie_app/services/api_service.dart'; // <--- عدّل اسم المشروع لو مختلف
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});

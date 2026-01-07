@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 // 1. --- (جديد) استدعاء مكتبة تهيئة التواريخ ---
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:tabeby_app/screens/auth_check_screen.dart';
+import 'package:sehetie_app/screens/auth_check_screen.dart';
 
 // 2. --- (تعديل) بنخلي الدالة "async" ---
 Future<void> main() async {
@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Tabeby App',
+      title: 'Sehetie',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,

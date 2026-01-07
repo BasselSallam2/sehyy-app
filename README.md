@@ -1,4 +1,4 @@
-# tabeby_app
+# sehetie_app
 
 A new Flutter project.
 

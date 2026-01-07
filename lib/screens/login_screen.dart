@@ -3,10 +3,10 @@ import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 // 1. استيراد الملفات اللي هنحتاجها
-import 'package:tabeby_app/services/api_service.dart';
-import 'package:tabeby_app/screens/home_screen.dart'; // <--- شاشتنا الجديدة
+import 'package:sehetie_app/services/api_service.dart';
+import 'package:sehetie_app/screens/home_screen.dart'; // <--- شاشتنا الجديدة
 // import main screen
-import 'package:tabeby_app/screens/main_screen.dart';
+import 'package:sehetie_app/screens/main_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -51,8 +51,9 @@ class _LoginScreenState extends State<LoginScreen> {
       // 4. لو نجح، بنجيب التوكين من الرد
       final token = response['token'];
       if (token != null) {
-        // 5. بنخزن التوكين بأمان
+        // 5. بنخزن التوكين بأمان ونمسح الـ guest flag
         await _storage.write(key: 'auth_token', value: token);
+        await _storage.delete(key: 'is_guest'); // Clear guest flag
 
         // 6. بننقل اليوزر للشاشة الرئيسية
         // بنستخدم pushReplacement عشان اليوزر لو داس "Back" ميرجعش للوجن

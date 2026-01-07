@@ -1,8 +1,8 @@
 import 'dart:async'; // (مهم عشان الـ Debounce Timer)
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:tabeby_app/services/api_service.dart';
-import 'package:tabeby_app/screens/doctor_profile_screen.dart';
+import 'package:sehetie_app/services/api_service.dart';
+import 'package:sehetie_app/screens/doctor_profile_screen.dart';
 
 class SearchScreen extends StatefulWidget {
   final String? specialtyId;
@@ -128,48 +128,51 @@ class _SearchScreenState extends State<SearchScreen> {
 
   // 10. --- ودجت "كارت النتيجة" (المعدل والأكثر أماناً) ---
   Widget _buildResultCard(Map<String, dynamic> doctor) {
-    
-    final String photoUrl = (doctor['avatar'] != null && doctor['avatar']['url'] != null)
+    final String photoUrl =
+        (doctor['avatar'] != null && doctor['avatar']['url'] != null)
         ? doctor['avatar']['url']
         : '';
-        
+
     // --- 1. (هنا الكود الجديد) ---
     // بنعرف متغير افتراضي
-    String specialtyName = 'أخصائي'; 
-    
+    String specialtyName = 'أخصائي';
+
     // بنتأكد إن الحقل موجود
     if (doctor['specialize'] != null) {
       // 2. بنشيك: هل الحقل ده Map (يعني populated)؟
-      if (doctor['specialize'] is Map<String, dynamic> && doctor['specialize']['title'] != null) {
+      if (doctor['specialize'] is Map<String, dynamic> &&
+          doctor['specialize']['title'] != null) {
         specialtyName = doctor['specialize']['title'];
-      } 
+      }
       // (لو هو String، خلاص هنسيبه "أخصائي" زي ما هو
       // لإننا منقدرش نجيب الاسم من الـ ID بس في الشاشة دي)
     }
     // --- نهاية الكود الجديد ---
-        
+
     final String city = doctor['city'] ?? '...';
-    
+
     return ListTile(
       leading: CircleAvatar(
         radius: 25,
         backgroundColor: Colors.grey.shade200,
-        backgroundImage: photoUrl.isNotEmpty ? CachedNetworkImageProvider(photoUrl) : null,
-        child: photoUrl.isEmpty ? const Icon(Icons.person, color: Colors.grey) : null,
+        backgroundImage: photoUrl.isNotEmpty
+            ? CachedNetworkImageProvider(photoUrl)
+            : null,
+        child: photoUrl.isEmpty
+            ? const Icon(Icons.person, color: Colors.grey)
+            : null,
       ),
       title: Text(doctor['name'] ?? 'دكتور'),
-      
+
       // 3. بنستخدم المتغيرات الجديدة
-      subtitle: Text('$specialtyName - $city'), 
-      
+      subtitle: Text('$specialtyName - $city'),
+
       trailing: const Icon(Icons.keyboard_arrow_left),
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => DoctorProfileScreen(
-              doctorId: doctor['_id'],
-            ),
+            builder: (context) => DoctorProfileScreen(doctorId: doctor['_id']),
           ),
         );
       },

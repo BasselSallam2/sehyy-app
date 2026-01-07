@@ -1,6 +1,6 @@
 {
-    "name": "tabeby_app",
-    "short_name": "tabeby_app",
+    "name": "sehetie_app",
+    "short_name": "sehetie_app",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

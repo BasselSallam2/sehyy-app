@@ -3,7 +3,9 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiService {
-  final String _baseUrl = 'https://dashboard.sehetie.com/api'; // <-- اتأكد من البورت
+  // final String _baseUrl = 'http://localhost:3000/api'; // <-- Local backend for development
+  final String _baseUrl =
+      'https://dashboard.sehetie.com/api'; // <-- Production backend
   final _storage = const FlutterSecureStorage();
 
   // --- دوال الـ Headers ---
@@ -64,6 +66,26 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> guestLogin() async {
+    final Uri url = Uri.parse('$_baseUrl/user/auth/guest');
+
+    try {
+      final response = await http.post(url, headers: _getPublicHeaders());
+      final Map<String, dynamic> responseData = json.decode(response.body);
+      if (response.statusCode == 200) {
+        return responseData;
+      } else {
+        throw Exception(responseData['message'] ?? 'Failed to login as guest');
+      }
+    } catch (e) {
+      print("--- FAILED AT: guestLogin ---");
+      print("--- ORIGINAL ERROR: ${e.toString()} ---");
+      print("--- ERROR TYPE: ${e.runtimeType} ---");
+
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
+
   Future<Map<String, dynamic>> login({
     required String phone,
     required String password,
@@ -105,14 +127,22 @@ class ApiService {
       );
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
-        final List<dynamic> countriesData = data['data'];
-        return countriesData.map((item) => item['country'].toString()).toList();
+        final List<dynamic> countriesData = data['data'] ?? [];
+        return countriesData
+            .where(
+              (item) =>
+                  item != null &&
+                  item is Map<String, dynamic> &&
+                  item.containsKey('country'),
+            )
+            .map((item) => item['country'].toString())
+            .toList();
       } else {
         throw Exception('Failed to load countries');
       }
     } catch (e) {
       // 1. دي أهم سطور، هتطبع الإيرور الحقيقي ونوعه
-      print("--- FAILED AT: [اسم الدالة، مثلاً getSpecialties] ---");
+      print("--- FAILED AT: fetchCountries ---");
       print("--- ORIGINAL ERROR: ${e.toString()} ---");
       print("--- ERROR TYPE: ${e.runtimeType} ---");
 
@@ -130,19 +160,22 @@ class ApiService {
       );
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
-        final List<dynamic> countryData = data['data'];
-        if (countryData.isNotEmpty) {
-          final List<dynamic> cities = countryData[0]['cities'];
-          return cities.map((city) => city.toString()).toList();
-        } else {
-          return [];
+        final List<dynamic> countryData = data['data'] ?? [];
+        if (countryData.isNotEmpty && countryData[0] != null) {
+          final dynamic countryObj = countryData[0];
+          if (countryObj is Map<String, dynamic> &&
+              countryObj.containsKey('cities')) {
+            final List<dynamic> cities = countryObj['cities'] ?? [];
+            return cities.map((city) => city.toString()).toList();
+          }
         }
+        return [];
       } else {
         throw Exception('Failed to load cities');
       }
     } catch (e) {
       // 1. دي أهم سطور، هتطبع الإيرور الحقيقي ونوعه
-      print("--- FAILED AT: [اسم الدالة، مثلاً getSpecialties] ---");
+      print("--- FAILED AT: fetchCities ---");
       print("--- ORIGINAL ERROR: ${e.toString()} ---");
       print("--- ERROR TYPE: ${e.runtimeType} ---");
 
@@ -185,9 +218,15 @@ class ApiService {
   Future<List<dynamic>> getSpecialties() async {
     final url = Uri.parse('$_baseUrl/specialize');
     try {
+      // Check if user is authenticated (has token)
+      final token = await _storage.read(key: 'auth_token');
+      final headers = (token != null && token.isNotEmpty)
+          ? await _getAuthHeaders() // Use auth headers if authenticated
+          : _getPublicHeaders(); // Use public headers for guests
+
       final response = await http.get(
         url,
-        headers: await _getAuthHeaders(), // <-- آمن
+        headers: headers, // <-- Dynamic headers based on auth status
       );
       final Map<String, dynamic> data = json.decode(response.body);
       if (response.statusCode == 200) {
@@ -197,7 +236,7 @@ class ApiService {
       }
     } catch (e) {
       // 1. دي أهم سطور، هتطبع الإيرور الحقيقي ونوعه
-      print("--- FAILED AT: [اسم الدالة، مثلاً getSpecialties] ---");
+      print("--- FAILED AT: getSpecialties ---");
       print("--- ORIGINAL ERROR: ${e.toString()} ---");
       print("--- ERROR TYPE: ${e.runtimeType} ---");
 
@@ -228,9 +267,15 @@ class ApiService {
       '$_baseUrl/bunner',
     ).replace(queryParameters: queryParams);
     try {
+      // Check if user is authenticated (has token)
+      final token = await _storage.read(key: 'auth_token');
+      final headers = (token != null && token.isNotEmpty)
+          ? await _getAuthHeaders() // Use auth headers if authenticated
+          : _getPublicHeaders(); // Use public headers for guests
+
       final response = await http.get(
         url,
-        headers: await _getAuthHeaders(), // <-- آمن
+        headers: headers, // <-- Dynamic headers based on auth status
       );
 
       // 1. دي هي الاستجابة الكاملة من الباك إند
@@ -266,7 +311,13 @@ class ApiService {
     // --- نهاية التعديل ---
 
     try {
-      final response = await http.get(url, headers: await _getAuthHeaders());
+      // Check if user is authenticated (has token)
+      final token = await _storage.read(key: 'auth_token');
+      final headers = (token != null && token.isNotEmpty)
+          ? await _getAuthHeaders() // Use auth headers if authenticated
+          : _getPublicHeaders(); // Use public headers for guests
+
+      final response = await http.get(url, headers: headers);
 
       final Map<String, dynamic> data = json.decode(response.body);
 
@@ -295,7 +346,13 @@ class ApiService {
     ).replace(queryParameters: queryParams);
 
     try {
-      final response = await http.get(url, headers: await _getAuthHeaders());
+      // Check if user is authenticated (has token)
+      final token = await _storage.read(key: 'auth_token');
+      final headers = (token != null && token.isNotEmpty)
+          ? await _getAuthHeaders() // Use auth headers if authenticated
+          : _getPublicHeaders(); // Use public headers for guests
+
+      final response = await http.get(url, headers: headers);
 
       final Map<String, dynamic> data = json.decode(response.body);
 
@@ -317,7 +374,13 @@ class ApiService {
     final url = Uri.parse('$_baseUrl/slot/$doctorId?sort=date');
 
     try {
-      final response = await http.get(url, headers: await _getAuthHeaders());
+      // Check if user is authenticated (has token)
+      final token = await _storage.read(key: 'auth_token');
+      final headers = (token != null && token.isNotEmpty)
+          ? await _getAuthHeaders() // Use auth headers if authenticated
+          : _getPublicHeaders(); // Use public headers for guests
+
+      final response = await http.get(url, headers: headers);
 
       final Map<String, dynamic> data = json.decode(response.body);
 
@@ -391,7 +454,13 @@ class ApiService {
     ).replace(queryParameters: queryParams);
 
     try {
-      final response = await http.get(url, headers: await _getAuthHeaders());
+      // Check if user is authenticated (has token)
+      final token = await _storage.read(key: 'auth_token');
+      final headers = (token != null && token.isNotEmpty)
+          ? await _getAuthHeaders() // Use auth headers if authenticated
+          : _getPublicHeaders(); // Use public headers for guests
+
+      final response = await http.get(url, headers: headers);
 
       final Map<String, dynamic> data = json.decode(response.body);
 

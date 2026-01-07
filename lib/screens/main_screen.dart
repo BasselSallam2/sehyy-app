@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:tabeby_app/screens/home_screen.dart';
-import 'package:tabeby_app/screens/bookings_screen.dart';
-import 'package:tabeby_app/screens/about_us_screen.dart'; // <-- 1. استيراد "من نحن"
+import 'package:sehetie_app/screens/home_screen.dart';
+import 'package:sehetie_app/screens/bookings_screen.dart';
+import 'package:sehetie_app/screens/about_us_screen.dart'; // <-- 1. استيراد "من نحن"
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});

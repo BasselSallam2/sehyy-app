@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-import 'package:tabeby_app/screens/welcome_screen.dart';
-import 'package:tabeby_app/screens/search_screen.dart';
-import 'package:tabeby_app/services/api_service.dart';
-import 'package:tabeby_app/screens/doctor_list_screen.dart';
-import 'package:tabeby_app/screens/doctor_profile_screen.dart';
-import 'package:tabeby_app/screens/about_us_screen.dart';
+import 'package:sehetie_app/screens/welcome_screen.dart';
+import 'package:sehetie_app/screens/search_screen.dart';
+import 'package:sehetie_app/services/api_service.dart';
+import 'package:sehetie_app/screens/doctor_list_screen.dart';
+import 'package:sehetie_app/screens/doctor_profile_screen.dart';
+import 'package:sehetie_app/screens/about_us_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,6 +18,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final ApiService _apiService = ApiService();
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   // داتا الفلاتر
   List<dynamic> _allSpecialties = [];
@@ -36,10 +37,19 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoadingMore = false; // <-- (جديد) للزرار
   int _bannerPage = 1;
   bool _hasNextPage = false; // <-- (جديد) عشان نعرف نعرض الزرار ولا لأ
+  bool _isGuest = false;
 
   @override
   void initState() {
     super.initState();
+    _checkGuestStatus();
+  }
+
+  Future<void> _checkGuestStatus() async {
+    final isGuest = await _storage.read(key: 'is_guest');
+    setState(() {
+      _isGuest = isGuest == 'true';
+    });
     _loadInitialData();
   }
 
@@ -52,22 +62,58 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      final results = await Future.wait([
+      List<Future<dynamic>> apiCalls = [
         _apiService.getSpecialties(),
-        _apiService.getUserCities(),
         _apiService.getBanners(limit: 3, page: 1), // <-- أول 3 بنرات (صفحة 1)
-      ]);
+      ];
+
+      // Only add getUserCities for non-guest users
+      if (!_isGuest) {
+        apiCalls.insert(1, _apiService.getUserCities());
+      }
+
+      final results = await Future.wait(apiCalls);
 
       // 3. بنتعامل مع الرد الجديد (Map)
-      final bannerResponse = results[2] as Map<String, dynamic>;
+      final bannerResponse = _isGuest
+          ? results[1]
+          : results[2] as Map<String, dynamic>;
 
       setState(() {
-        _allSpecialties =
-            results[0] as List<dynamic>; // <--- 1. ضيف 'as List<dynamic>'
-        _userCities = results[1] as List<String>;
+        // Safe casting with null checks
+        final specialtiesData = results[0];
+        _allSpecialties = (specialtiesData is List<dynamic>)
+            ? specialtiesData
+                  .where((item) => item != null && item is Map<String, dynamic>)
+                  .toList()
+            : [];
 
-        _banners = bannerResponse['data'];
-        _hasNextPage = bannerResponse['pagination']['hasNextPage'];
+        // Set user cities only for authenticated users
+        if (!_isGuest && results.length > 2) {
+          final citiesData = results[1];
+          _userCities = (citiesData is List<String>) ? citiesData : [];
+        } else {
+          _userCities = []; // Empty for guests
+        }
+
+        // Safe access to banner data
+        if (bannerResponse is Map<String, dynamic>) {
+          final bannerData = bannerResponse['data'];
+          _banners = (bannerData is List<dynamic>)
+              ? bannerData.where((item) => item != null).toList()
+              : [];
+
+          final pagination = bannerResponse['pagination'];
+          if (pagination is Map<String, dynamic>) {
+            _hasNextPage = pagination['hasNextPage'] == true;
+          } else {
+            _hasNextPage = false;
+          }
+        } else {
+          _banners = [];
+          _hasNextPage = false;
+        }
+
         _isLoadingPage = false;
       });
     } catch (e) {
@@ -411,18 +457,25 @@ class _HomeScreenState extends State<HomeScreen> {
       itemCount: _allSpecialties.length,
       itemBuilder: (context, index) {
         final specialty = _allSpecialties[index];
+        if (specialty is! Map<String, dynamic>) {
+          return const SizedBox.shrink(); // Return empty widget for invalid data
+        }
+
         return InkWell(
           onTap: () {
             // --- 2. ده الكود اللي "هيفعّل" الزرار ---
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => DoctorListScreen(
-                  specialtyId: specialty['_id'],
-                  specialtyName: specialty['title'],
+            final specialtyId = specialty['_id']?.toString();
+            if (specialtyId != null && specialtyId.isNotEmpty) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DoctorListScreen(
+                    specialtyId: specialtyId,
+                    specialtyName: specialty['title']?.toString() ?? 'Unknown',
+                  ),
                 ),
-              ),
-            );
+              );
+            }
           },
           child: Container(
             padding: const EdgeInsets.all(8.0),
@@ -441,7 +494,7 @@ class _HomeScreenState extends State<HomeScreen> {
               //mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 CachedNetworkImage(
-                  imageUrl: specialty['image']['url'],
+                  imageUrl: specialty['image']?['url'] ?? '',
                   width: 40,
                   height: 40,
                   placeholder: (context, url) =>
@@ -453,7 +506,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 SizedBox(
                   height: 50,
                   child: Text(
-                    specialty['title'],
+                    specialty['title']?.toString() ?? 'Unknown',
                     textAlign: TextAlign.center,
                     maxLines: 2, // هيفضل 2
                     overflow: TextOverflow.ellipsis,
@@ -486,12 +539,19 @@ class _HomeScreenState extends State<HomeScreen> {
             hint: const Text('كل الأقسام'),
             isExpanded: true,
             decoration: const InputDecoration(border: OutlineInputBorder()),
-            items: _allSpecialties.map((specialty) {
-              return DropdownMenuItem<String>(
-                value: specialty['_id'],
-                child: Text(specialty['title']),
-              );
-            }).toList(),
+            items: _allSpecialties
+                .map((specialty) {
+                  if (specialty is Map<String, dynamic>) {
+                    return DropdownMenuItem<String>(
+                      value: specialty['_id']?.toString(),
+                      child: Text(specialty['title']?.toString() ?? 'Unknown'),
+                    );
+                  }
+                  return null;
+                })
+                .where((item) => item != null)
+                .cast<DropdownMenuItem<String>>()
+                .toList(),
             onChanged: (String? newValue) {
               setState(() {
                 _selectedSpecialtyId = newValue;

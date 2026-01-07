@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:tabeby_app/services/api_service.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:sehetie_app/services/api_service.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart'; // (للتاريخ العربي)
 import 'package:url_launcher/url_launcher.dart'; // (عشان اللوكيشن والتليفون)
-
+import 'package:sehetie_app/screens/login_screen.dart';
 
 class DoctorProfileScreen extends StatefulWidget {
   final String doctorId;
@@ -16,6 +17,7 @@ class DoctorProfileScreen extends StatefulWidget {
 
 class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
   final ApiService _apiService = ApiService();
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
   Map<String, dynamic>? _doctorDetails;
   List<dynamic> _allSlots = [];
   bool _isLoading = true;
@@ -47,11 +49,13 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
       ]);
       _doctorDetails = results[0] as Map<String, dynamic>;
       _allSlots = results[1] as List<dynamic>;
+
       _processSlots();
       setState(() {
         _isLoading = false;
       });
     } catch (e) {
+      print('Error in _loadAllData: $e');
       setState(() {
         _isLoading = false;
       });
@@ -75,6 +79,8 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
       final bool isAfterNow = slotDate.isAfter(now);
       return !isReserved && isAfterNow;
     }).toList();
+
+    print('Available slots count: ${availableSlots.length}');
 
     // بنملى قايمة الأيام المتاحة (عشان نستخدمها في كذا مكان)
     _availableDates = availableSlots
@@ -128,12 +134,23 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     // بنخلي أول يوم في التقويم هو "أول يوم متاح"
     final DateTime firstAvailableDate = _availableDates.first;
 
+    // بنحدد تاريخ النهاية - إما 90 يوم من الآن، أو 90 يوم من أول يوم متاح (أيهما أبعد)
+    final DateTime defaultLastDate = DateTime.now().add(
+      const Duration(days: 90),
+    );
+    final DateTime extendedLastDate = firstAvailableDate.add(
+      const Duration(days: 90),
+    );
+    final DateTime lastDate = extendedLastDate.isAfter(defaultLastDate)
+        ? extendedLastDate
+        : defaultLastDate;
+
     final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: firstAvailableDate, // اليوم اللي "متعلّم عليه"
       currentDate: DateTime.now(), // اليوم اللي "هيفتح عليه" التقويم
       firstDate: firstAvailableDate, // بنبدأ التقويم من أول يوم متاح
-      lastDate: DateTime.now().add(const Duration(days: 90)),
+      lastDate: lastDate,
       selectableDayPredicate: (DateTime day) {
         // بنشيك على القايمة اللي جهزناها
         return _availableDates.any(
@@ -239,7 +256,21 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     }
   }
 
+  Future<bool> _isGuestUser() async {
+    final isGuest = await _storage.read(key: 'is_guest');
+    return isGuest == 'true';
+  }
+
   Future<void> _bookSlot(String slotId, {String? bannerId}) async {
+    // Check if user is a guest
+    final isGuest = await _isGuestUser();
+
+    if (isGuest) {
+      // Show login prompt for guest users
+      _showLoginPrompt();
+      return;
+    }
+
     try {
       await _apiService.bookSlot(slotId, bannerId: bannerId);
 
@@ -258,6 +289,37 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
         ),
       );
     }
+  }
+
+  void _showLoginPrompt() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('تسجيل الدخول مطلوب'),
+          content: const Text(
+            'يجب عليك تسجيل الدخول لحجز موعد لدى الطبيب. هل تريد تسجيل الدخول الآن؟',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('إلغاء'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+                // Navigate to login screen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                );
+              },
+              child: const Text('تسجيل الدخول'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // --- 3. دوال التواصل (اللوكيشن والتليفون) ---

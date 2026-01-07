@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:tabeby_app/services/api_service.dart';
+import 'package:sehetie_app/services/api_service.dart';
 
 // 1. استيراد شاشة البروفايل (اللي لسه هنعملها)
-import 'package:tabeby_app/screens/doctor_profile_screen.dart';
-import 'package:tabeby_app/screens/search_screen.dart'; // <-- 1. ضيف ده
+import 'package:sehetie_app/screens/doctor_profile_screen.dart';
+import 'package:sehetie_app/screens/search_screen.dart'; // <-- 1. ضيف ده
 
 class DoctorListScreen extends StatefulWidget {
   final String specialtyId;

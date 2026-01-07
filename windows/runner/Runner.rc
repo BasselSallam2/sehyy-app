@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "tabeby_app" "\0"
+            VALUE "FileDescription", "sehetie_app" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "tabeby_app" "\0"
+            VALUE "InternalName", "sehetie_app" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2025 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "tabeby_app.exe" "\0"
-            VALUE "ProductName", "tabeby_app" "\0"
+            VALUE "OriginalFilename", "sehetie_app.exe" "\0"
+            VALUE "ProductName", "sehetie_app" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
